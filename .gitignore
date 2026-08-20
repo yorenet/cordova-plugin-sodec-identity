@@ -1,0 +1,12 @@
+# IDE & System files
+.DS_Store
+.idea/
+*.iml
+*.swp
+.vscode/
+
+# Build outputs
+build/
+bin/
+*.apk
+*.aar

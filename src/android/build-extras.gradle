@@ -1,0 +1,19 @@
+repositories {
+    google()
+    mavenCentral()
+    maven {
+        url "https://sodectechnologies.jfrog.io/artifactory/libs-release-local"
+        credentials {
+            username = "sodecapps"
+            password = "AP5ZbeN82cvmEWMk1SJgqCqiAjb"
+        }
+    }
+    maven { url "https://jitpack.io" }
+    maven { url "https://developer.huawei.com/repo/" }
+}
+
+dependencies {
+    implementation 'com.sodec.technologies:identity-platform-v1:1.0.3.1'
+    implementation 'androidx.appcompat:appcompat:1.4.1'
+    implementation 'androidx.multidex:multidex:2.0.1'
+}

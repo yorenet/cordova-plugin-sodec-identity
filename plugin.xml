@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        id="cordova-plugin-sodec-identity"
+        version="1.0.0">
+
+    <name>Sodec Identity Plugin</name>
+
+    <js-module src="www/SodecIdentity.js" name="SodecIdentity">
+        <clobbers target="window.plugins.SodecIdentity" />
+    </js-module>
+
+    <!-- ================= ANDROID PLATFORM ================= -->
+    <platform name="android">
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="SodecIdentity">
+                <param name="android-package" value="com.yorenet.plugin.SodecPluginWrapper" />
+            </feature>
+        </config-file>
+
+        <!-- Manifest Ayarları: largeHeap ve FileProvider -->
+        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+            <provider
+                android:name="com.sodecapps.samobilecapture.content.SAFileProvider"
+                android:authorities="${applicationId}.com.sodecapps.samobilecapture.fileprovider"
+                android:exported="false"
+                android:grantUriPermissions="true"
+                tools:replace="android:authorities">
+                <meta-data
+                    android:name="android.support.FILE_PROVIDER_PATHS"
+                    android:resource="@xml/sa_file_provider_paths" />
+            </provider>
+        </config-file>
+
+        <config-file target="AndroidManifest.xml" parent="/manifest/application" mode="merge">
+            <application android:largeHeap="true" />
+        </config-file>
+
+        <!-- Gradle Repositories & Dependencies Config -->
+        <framework src="src/android/build-extras.gradle" custom="true" type="gradleReference" />
+
+        <source-file src="src/android/SodecPluginWrapper.java" target-dir="src/com/yorenet/plugin" />
+    </platform>
+
+    <!-- =================   iOS PLATFORM   ================= -->
+    <platform name="ios">
+        <config-file target="config.xml" parent="/*">
+            <feature name="SodecIdentity">
+                <param name="ios-package" value="SodecPluginWrapper" />
+            </feature>
+        </config-file>
+
+        <config-file target="*-Info.plist" parent="NSCameraUsageDescription">
+            <string>Kimlik tarama ve canlılık doğrulaması için kamera erişimi gereklidir.</string>
+        </config-file>
+        <config-file target="*-Info.plist" parent="NFCReaderUsageDescription">
+            <string>Kimlik çipini okumak için NFC erişimi gereklidir.</string>
+        </config-file>
+
+        <podspec>
+            <pods use-frameworks="true">
+                <pod name="SAMobileCapture" git="https://bitbucket.org/sodec/sodec-identity-platform-v1-static.git" tag="1.0.0" />
+            </pods>
+        </podspec>
+
+        <source-file src="src/ios/SodecPluginWrapper.swift" />
+    </platform>
+</plugin>
