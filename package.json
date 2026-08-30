@@ -1,0 +1,21 @@
+{
+  "name": "cordova-plugin-sodec-identity",
+  "version": "1.1.1",
+  "description": "Cordova plugin wrapper for Sodec Identity Platform SDK (KYC)",
+  "cordova": {
+    "id": "cordova-plugin-sodec-identity",
+    "platforms": [
+      "android",
+      "ios"
+    ]
+  },
+  "keywords": [
+    "ecosystem:cordova",
+    "cordova-android",
+    "cordova-ios",
+    "sodec",
+    "kyc"
+  ],
+  "author": "Yorenet",
+  "license": "ISC"
+}

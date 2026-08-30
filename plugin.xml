@@ -3,7 +3,7 @@
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
         id="cordova-plugin-sodec-identity"
-        version="1.0.0">
+        version="1.1.1">
 
     <name>Sodec Identity Plugin</name>
 
