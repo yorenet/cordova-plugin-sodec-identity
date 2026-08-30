@@ -1,10 +1,12 @@
 var exec = require('cordova/exec');
 
 var SodecIdentity = {
-    startCapture: function (options, successCallback, errorCallback) {
-        // "SodecIdentity" matches the feature name in plugin.xml
-        // "startCapture" matches the method inside Java/Swift wrappers
-        exec(successCallback, errorCallback, 'SodecIdentity', 'startCapture', [options]);
+    startVerificationWithToken: function (options, successCallback, errorCallback) {
+        exec(successCallback, errorCallback, 'SodecIdentity', 'startVerification', [options]);
+    },
+    
+    startVerificationWithIDNumber: function (options, successCallback, errorCallback) {
+        exec(successCallback, errorCallback, 'SodecIdentity', 'startVerificationWithIDNumber', [options]);
     }
 };
 

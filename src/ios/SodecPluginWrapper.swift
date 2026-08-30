@@ -1,109 +1,119 @@
 import Foundation
-import Cordova
+import UIKit
 import SAMobileCapture
 
 @objc(SodecPluginWrapper)
-class SodecPluginWrapper: CDVPlugin, SACustomerVerificationDelegate {
+class SodecPluginWrapper: CDVPlugin, SAMobileCaptureDelegate {
     
-    var currentCallbackId: String?
-
+    private var currentCommand: CDVInvokedUrlCommand?
+    
+    // MARK: - Action: startVerification (Token)
     @objc(startVerification:)
     func startVerification(command: CDVInvokedUrlCommand) {
-        self.currentCallbackId = command.callbackId
-        
-        guard let options = command.arguments[0] as? [String: Any],
-              let token = options["token"] as? String else {
-            let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Geçersiz parametre veya token eksik.")
-            self.commandDelegate?.send(pluginResult, callbackId: command.callbackId)
+        self.currentCommand = command
+        guard let options = command.arguments.first as? [String: Any] else {
+            let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid options parameters")
+            self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
             return
         }
-
-        let baseUrl = options["baseUrl"] as? String ?? "https://testkyccloud.sodec.com/"
-        let clientId = options["clientId"] as? String ?? "8502111d-6cd8-4efa-b624-336f76b12a12"
-        let clientKey = options["clientKey"] as? String ?? "3b1997a3-192c-490e-af7f-663bfb316147"
-
+        
         DispatchQueue.main.async {
-            // SAFileManager temizliği (Doküman önerisi)
-            SAFileManager.removeDocumentDirectory()
-
-            guard let apiManager = SAApiManager(baseUrl: baseUrl, withSubscriptionId: clientId, withSubscriptionKey: clientKey) else {
-                let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "SAApiManager başlatılamadı.")
-                self.commandDelegate?.send(pluginResult, callbackId: command.callbackId)
-                return
-            }
-
-            // Temel API Ayarları
-            apiManager.timeout = 30.0
-            apiManager.scenario = "1"
-            apiManager.showServiceErrors = true
-            apiManager.processReturnType = .toInitialProcess
-            apiManager.minimumAgeForKyc = 18
-            apiManager.enableHologramAndOviDetection = false
-            apiManager.nfcVerificationMandatory = false
-            apiManager.enableMaskDetection = true
-            apiManager.maxCountOfAttemptsForLiveness = 10
-            apiManager.maxCountOfAttemptsForFaceVerification = 3
-            apiManager.displayTypeOfKycVerificationResult = .alwaysShow
-
-            // İstenmeyen Kimlik Tipleri
-            let undesiredIdentityTypes = SAIdentityTypes()
-            undesiredIdentityTypes?.add(.oldIdentityCard)
-            undesiredIdentityTypes?.add(.oldDrivingLicense)
-            undesiredIdentityTypes?.add(.newDrivingLicense)
-            undesiredIdentityTypes?.add(.passport)
-            undesiredIdentityTypes?.add(.oldResidencePermit)
-            undesiredIdentityTypes?.add(.newResidencePermit)
-            undesiredIdentityTypes?.add(.temporaryProtection)
-            apiManager.undesiredIdentityTypes = undesiredIdentityTypes
-
-            // Ekran Oluşturma ve Present
-            if let customerVerification = apiManager.createCustomerVerification(self, withToken: token) {
-                self.viewController?.present(customerVerification, animated: true, completion: nil)
-            } else {
-                let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "CustomerVerification ekranı oluşturulamadı.")
-                self.commandDelegate?.send(pluginResult, callbackId: command.callbackId)
-            }
+            self.launchSdk(options: options, useIdNumber: false)
         }
     }
-
-    // MARK: - SACustomerVerificationDelegate
-
-    func customerVerificationDidCancel(_ controller: SACustomerVerification!) {
-        controller.dismiss(animated: true) {
-            if let callbackId = self.currentCallbackId {
-                let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "CANCELLED")
-                self.commandDelegate?.send(pluginResult, callbackId: callbackId)
-            }
+    
+    // MARK: - Action: startVerificationWithIDNumber (ID Number)
+    @objc(startVerificationWithIDNumber:)
+    func startVerificationWithIDNumber(command: CDVInvokedUrlCommand) {
+        self.currentCommand = command
+        guard let options = command.arguments.first as? [String: Any] else {
+            let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid options parameters")
+            self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+            return
+        }
+        
+        DispatchQueue.main.async {
+            self.launchSdk(options: options, useIdNumber: true)
         }
     }
-
-    func customerVerificationDidDone(_ controller: SACustomerVerification!, with verificationResultType: SAVerificationResultType, with buttonActionType: SAButtonActionType) {
-        controller.dismiss(animated: true) {
-            if let callbackId = self.currentCallbackId {
-                var statusString = "Unknown"
-                if verificationResultType == .approved {
-                    statusString = "Approved"
-                } else if verificationResultType == .pending {
-                    statusString = "Pending"
-                }
-
-                let resultDict: [String: Any] = [
-                    "status": statusString,
-                    "buttonAction": "\(buttonActionType.rawValue)"
-                ]
-
-                let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: resultDict)
-                self.commandDelegate?.send(pluginResult, callbackId: callbackId)
-            }
+    
+    // MARK: - Private Helper to Init and Launch SAMobileCapture SDK
+    private func launchSdk(options: [String: Any], useIdNumber: Bool) {
+        let baseUrl = options["baseUrl"] as? String ?? "https://testkyccloud.sodec.com/"
+        let clientId = options["clientId"] as? String ?? ""
+        let clientKey = options["clientKey"] as? String ?? ""
+        
+        // 1. UI Setup Configuration
+        let configManager = SAConfigManager.shared
+        configManager.setLanguage("tr")
+        configManager.setPrimaryColor(UIColor(red: 0.09, green: 0.18, blue: 0.30, alpha: 1.0)) // #172E4D
+        configManager.setAccentColor(UIColor(red: 1.0, green: 0.5, blue: 0.0, alpha: 1.0))   // #FF8000
+        configManager.setButtonsRounded(true)
+        
+        // 2. API Manager Configuration
+        let apiManager = SAApiManager.shared
+        apiManager.setup(baseUrl: baseUrl, clientId: clientId, clientKey: clientKey)
+        apiManager.setScenario("1")
+        apiManager.setMinimumAgeForKyc(18)
+        apiManager.setEnableMaskDetection(true)
+        apiManager.setMaxCountOfAttemptsForLiveness(10)
+        apiManager.setMaxCountOfAttemptsForFaceVerification(3)
+        
+        // Set self as Delegate to catch SDK results
+        SAMobileCapture.shared.delegate = self
+        
+        guard let viewController = self.viewController else {
+            sendError(message: "NO_VIEW_CONTROLLER")
+            return
+        }
+        
+        // 3. Launch SDK with Token vs ID Number
+        if useIdNumber {
+            let idNumber = options["idNumber"] as? String ?? ""
+            SAMobileCapture.shared.startCustomerVerification(
+                withIDNumber: idNumber,
+                presentingViewController: viewController
+            )
+        } else {
+            let token = options["token"] as? String ?? ""
+            SAMobileCapture.shared.startCustomerVerification(
+                withToken: token,
+                presentingViewController: viewController
+            )
         }
     }
-
-    func customerVerificationDidError(_ controller: SACustomerVerification!, withErrorMessage errorMessage: String!) {
-        controller.dismiss(animated: true) {
-            if let callbackId = self.currentCallbackId {
-                let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: errorMessage ?? "Unknown Error")
-                self.commandDelegate?.send(pluginResult, callbackId: callbackId)
-            }
-        }
+    
+    // MARK: - SAMobileCaptureDelegate Methods
+    
+    func didCompleteVerification(result: SAVerificationResult) {
+        let response: [String: Any] = [
+            "status": "APPROVED",
+            "verificationResult": result.resultTypeRawValue ?? "Success"
+        ]
+        sendSuccess(result: response)
+    }
+    
+    func didFailVerification(error: SAError) {
+        sendError(message: error.localizedDescription)
+    }
+    
+    func didCancelVerification() {
+        sendError(message: "CANCELLED")
+    }
+    
+    // MARK: - Cordova Output Helpers
+    
+    private func sendSuccess(result: [String: Any]) {
+        guard let command = self.currentCommand else { return }
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: result)
+        self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+        self.currentCommand = nil
+    }
+    
+    private func sendError(message: String) {
+        guard let command = self.currentCommand else { return }
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: message)
+        self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+        self.currentCommand = nil
     }
 }

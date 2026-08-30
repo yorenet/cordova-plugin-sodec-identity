@@ -35,7 +35,7 @@ public class SodecPluginWrapper extends CordovaPlugin {
     private CallbackContext currentCallbackContext;
 
     @Override
-    public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+    public boolean executeXXX_ONCEKI(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         if ("startVerification".equals(action)) {
             this.currentCallbackContext = callbackContext;
             JSONObject options = args.getJSONObject(0);
@@ -55,6 +55,35 @@ public class SodecPluginWrapper extends CordovaPlugin {
         }
         return false;
     }
+    
+    
+    @Override
+    public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+        this.currentCallbackContext = callbackContext;
+        JSONObject options = args.getJSONObject(0);
+        
+        if ("startVerification".equals(action)) {
+            cordova.getActivity().runOnUiThread(() -> {
+                try {
+                    startSdkVerification(options, false); // use Token
+                } catch (Exception e) {
+                    callbackContext.error("SDK Init Failed: " + e.getMessage());
+                }
+            });
+            return true;
+        } else if ("startVerificationWithIDNumber".equals(action)) {
+            cordova.getActivity().runOnUiThread(() -> {
+                try {
+                    startSdkVerification(options, true); // use ID Number
+                } catch (Exception e) {
+                    callbackContext.error("SDK Init Failed: " + e.getMessage());
+                }
+            });
+            return true;
+        }
+        return false;
+    }
+    
 
     private void startSdkVerification(JSONObject options) throws Exception {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
@@ -67,6 +96,12 @@ public class SodecPluginWrapper extends CordovaPlugin {
         String baseUrl = options.optString("baseUrl", "https://testkyccloud.sodec.com/");
         String clientId = options.optString("clientId", "8502111d-6cd8-4efa-b624-336f76b12a12");
         String clientKey = options.optString("clientKey", "3b1997a3-192c-490e-af7f-663bfb316147");
+
+        // for verify with ID
+        boolean useProduction = options.optBoolean("useProductionServer", false);
+        boolean enableManualID = options.optBoolean("enableManualIDCapture", true);
+        boolean useEmbeddedModels = options.optBoolean("useEmbeddedModelsInAssets", false);
+        // ...
 
         Context context = cordova.getActivity().getApplicationContext();
 
@@ -121,7 +156,24 @@ public class SodecPluginWrapper extends CordovaPlugin {
         cordova.setActivityResultCallback(this);
 
         // SDK Aktivitesini Başlat
-        apiManager.startCustomerVerificationWithToken(cordova.getActivity(), CUSTOMER_VERIFICATION_REQUEST_CODE, token);
+        
+        // updated for verify with ID
+
+        if (useIdNumber) {
+            String idNumber = options.optString("idNumber", "");
+            apiManager.startCustomerVerificationWithIDNumber(
+                cordova.getActivity(), 
+                CUSTOMER_VERIFICATION_REQUEST_CODE, 
+                idNumber
+            );
+        } else {
+            String token = options.optString("token", "");
+            apiManager.startCustomerVerificationWithToken(
+                cordova.getActivity(), 
+                CUSTOMER_VERIFICATION_REQUEST_CODE, 
+                token
+            );
+        }
     }
 
     @Override
