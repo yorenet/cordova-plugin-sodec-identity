@@ -3,7 +3,7 @@
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
         id="cordova-plugin-sodec-identity"
-        version="1.1.1">
+        version="1.1.2">
 
     <name>Sodec Identity Plugin</name>
 
@@ -33,9 +33,9 @@
             </provider>
         </config-file>
 
-        <config-file target="AndroidManifest.xml" parent="/manifest/application" mode="merge">
+        <!-- config-file target="AndroidManifest.xml" parent="/manifest/application" mode="merge">
             <application android:largeHeap="true" />
-        </config-file>
+        </config-file -->
 
         <!-- Gradle Repositories & Dependencies Config -->
         <framework src="src/android/build-extras.gradle" custom="true" type="gradleReference" />
@@ -60,7 +60,7 @@
 
         <podspec>
             <pods use-frameworks="true">
-                <pod name="SAMobileCapture" git="https://bitbucket.org/sodec/sodec-identity-platform-v1-static.git" tag="1.0.0" />
+                <pod name="SAMobileCapture" git="https://bitbucket.org/sodec/sodec-identity-platform-v1-static.git" tag="1.1.2" />
             </pods>
         </podspec>
 
