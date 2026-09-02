@@ -19,22 +19,20 @@
             </feature>
         </config-file>
 
-        <!-- Manifest Ayarları: largeHeap ve FileProvider -->
-        <config-file target="AndroidManifest.xml" parent="/manifest/application">
-            <provider
-                android:name="com.sodecapps.samobilecapture.content.SAFileProvider"
-                android:authorities="${applicationId}.com.sodecapps.samobilecapture.fileprovider"
-                android:exported="false"
-                android:grantUriPermissions="true"
-                tools:replace="android:authorities">
-                <meta-data
-                    android:name="android.support.FILE_PROVIDER_PATHS"
-                    android:resource="@xml/sa_file_provider_paths" />
-            </provider>
-        </config-file>
-        <edit-config file="AndroidManifest.xml" target="/manifest" mode="merge">
-            <manifest xmlns:tools="http://schemas.android.com/tools" />
-        </edit-config>
+<!-- Manifest Ayarları: largeHeap ve FileProvider -->
+<config-file target="AndroidManifest.xml" parent="/manifest/application"
+             xmlns:tools="http://schemas.android.com/tools">
+    <provider
+        android:name="com.sodecapps.samobilecapture.content.SAFileProvider"
+        android:authorities="${applicationId}.com.sodecapps.samobilecapture.fileprovider"
+        android:exported="false"
+        android:grantUriPermissions="true"
+        tools:replace="android:authorities">
+        <meta-data
+            android:name="android.support.FILE_PROVIDER_PATHS"
+            android:resource="@xml/sa_file_provider_paths" />
+    </provider>
+</config-file>       
         <!-- config-file target="AndroidManifest.xml" parent="/manifest/application" mode="merge">
             <application android:largeHeap="true" />
         </config-file -->
